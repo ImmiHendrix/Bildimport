@@ -1,21 +1,6 @@
-Bildimport Tische Standard
-	wood_art - Holzart - id 245
-		option values : Kernbuche 241 OR 242
-						Buche 239 OR 240
-						Eiche 237 OR 238
-						Eiche sonoma 236
-						Eiche verwittert 235
-						Buche kolonial 234
-						Kernbuche nussbaum 233
-	table_function - Tischfunktion - id 248
-		option values : Fest 296
-						ausziehbar NOT LIKE 296
-	
-
-
 <?php
 die();
-ini_set('max_execution_time', 0); //Setze Ausführungszeit auf unendlich
+ini_set('max_execution_time', 0);
 ini_set('memory_limit', '2048M');
 ini_set('display_errors', 1);
 function getUniqueCode($length = "")
@@ -29,16 +14,13 @@ require_once 'app/Mage.php';
 umask(0);
 Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
 
-
-
-
-//Ordne Artikeln Bilder zu
 $host = "localhost";
 $user = "dev";
 $password = "devsec#543!";
 $db = "swopper-muvman";
 $connect = mysql_connect($host,$user,$password) or die(mysql_error());
 mysql_select_db($db)or die(mysql_error());
+
 
 $view = mysql_query("
 	CREATE OR REPLACE VIEW catalog_product_entity_value AS
@@ -47,23 +29,28 @@ $view = mysql_query("
 			catalog_product_entity_varchar AS V  ON P.entity_id = V.entity_id  AND V.attribute_id = 245 LEFT JOIN
 			catalog_product_entity_varchar AS V1 ON P.entity_id = V1.entity_id AND V1.attribute_id = 248") or die(mysql_error());
 
-			/*Holzart - id 245
+/* Infos zu den Attributen+Values
+Bildimport Tische Standard
+	wood_art - Holzart - id 245
 		option values : Kernbuche 241 OR 242
 						Buche 239 OR 240
 						Eiche 237 OR 238
 						Eiche sonoma 236
 						Eiche verwittert 235
 						Buche kolonial 234
-						Kernbuche nussbaum 233*/
-						
+						Kernbuche nussbaum 233
+	table_function - Tischfunktion - id 248
+		option values : Fest 296
+						ausziehbar NOT LIKE 296
+*/	
+			
 $holz = array (233,234,235,236,237,238,239,240,241,242);
 	foreach($holz as $_holz_key => $_holz_val) {
             $result = mysql_query("
 			SELECT * FROM catalog_product_entity_value
-			WHERE Holzart =".$_holz_val."")
+			WHERE Holzart IN ('. implode(',', $_holz_val).')") //übergibt das komplette Array als einen String
                 or die(mysql_error());
             while($row = mysql_fetch_array($result)) {
-                // Füge Bild §basis[i]_$fuss[j]_$bezugsfarbe[k].jpg zu artikel mit artikelnummer 'sku' => $result hinzu
                 $data[] = array(
                     'sku' => $row['Artikelnummer'],
                     '_media_image' => 'pic_'.$row['Holzart'].'.jpg',
